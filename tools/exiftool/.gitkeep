@@ -1,0 +1,5 @@
+# This file is intentionally left blank.
+# It ensures that the 'tools/exiftool' directory is tracked by Git.
+#
+# TODO: M2-01 - exiftool.exe 실행 파일을 이 폴더에 위치시켜야 합니다.
+# PRD 8.1: ExifTool을 번들에 포함하여 별도 설치 없이 동작해야 합니다.

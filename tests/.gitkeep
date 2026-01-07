@@ -1,0 +1,7 @@
+# This file is intentionally left blank.
+# It ensures that the 'tests' directory is tracked by Git.
+#
+# TODO: DTL M5-01 - 단위 테스트 및 통합 테스트 코드를 이 폴더에 작성합니다.
+# - tests/test_patterns.py
+# - tests/test_collision.py
+# - tests/test_planner.py
