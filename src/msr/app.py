@@ -4,13 +4,14 @@ This module defines the main application class, which orchestrates the UI and th
 - DTL M3: GUI 통합(워커/진행률/로그/완료)
 """
 import tkinter as tk
-from tkinter import ttk
+from tkinter import messagebox
+import os
+from pathlib import Path
+from queue import Queue, Empty
+from threading import Thread, Event
 
 from msr.ui.gui import MainWindow
-
-# TODO: M3-02 - 워커 스레드 및 Queue 임포트
-# from queue import Queue
-# from threading import Thread
+from msr.core.file_processor import FileProcessor
 
 
 class MediaShotdateRenamerApp(tk.Tk):
@@ -25,20 +26,19 @@ class MediaShotdateRenamerApp(tk.Tk):
     def __init__(self):
         super().__init__()
 
-        # TODO: M3-01 - 메인 윈도우 설정
-        # - 타이틀 설정
-        # - 창 크기 및 초기 위치 설정
-        # - 창 크기 조절 가능 여부 설정
         self.title("Media Shotdate Renamer (v1.0)")
         self.geometry("800x600")
+        self.minsize(600, 500)
 
-        # TODO: M3-02 - 워커 스레드와 통신할 Queue 생성
+        # M3-02: 워커 스레드와 통신할 Queue 생성
+        self.queue = Queue()
+        self.stop_event = Event()
 
-        # TODO: M3-01 - 메인 UI 프레임 생성 및 표시
         self.main_window = MainWindow(self)
         self.main_window.pack(side="top", fill="both", expand=True)
 
-        # TODO: M3-02 - 주기적으로 Queue를 확인하는 `after` 콜백 설정
+        # M3-02: 주기적으로 Queue를 확인하는 `after` 콜백 설정
+        self.after(100, self.on_processing_event)
 
     def start_processing(self, source_directory: str):
         """
@@ -47,11 +47,15 @@ class MediaShotdateRenamerApp(tk.Tk):
         - Creates and starts the worker thread.
         - PRD NFR-01: GUI 프리징이 없어야 한다.
         """
-        # TODO: M3-02 - 워커 스레드 생성
-        # - file_processor.process_files를 target으로 지정
-        # - UI 업데이트를 위한 Queue를 인자로 전달
-        print(f"Request to start processing in: {source_directory}")
-        pass
+        if not source_directory or not os.path.exists(source_directory):
+            messagebox.showwarning("경고", "유효한 소스 폴더를 선택해주세요.")
+            return
+        
+        # M3-02: 워커 스레드 생성 및 시작 로직
+        self.stop_event.clear()
+        processor = FileProcessor(source_directory, self.queue, self.stop_event)
+        worker = Thread(target=processor.process_files, daemon=True)
+        worker.start()
 
     def on_processing_event(self):
         """
@@ -61,11 +65,27 @@ class MediaShotdateRenamerApp(tk.Tk):
         - Handles the completion event.
         - CRG 8.2: UI 업데이트는 너무 빈번하지 않게(100~250ms) 제한.
         """
-        # TODO: M3-02 - Queue에서 이벤트 가져오기 및 처리
-        # - 진행률 업데이트
-        # - 로그 메시지 추가
-        # - 완료/에러 상태 처리
-        pass
+        try:
+            # 한 번의 after 호출에서 큐에 쌓인 이벤트를 여러 개 처리하여 반응성 향상
+            for _ in range(50):
+                event = self.queue.get_nowait()
+                etype = event.get("type")
+
+                if etype == "LOG":
+                    self.main_window.append_log(event["msg"])
+                elif etype == "PROGRESS":
+                    self.main_window.update_progress(event["current"], event["total"])
+                elif etype == "COMPLETE":
+                    self.on_processing_complete(event["summary"])
+                elif etype == "ERROR":
+                    self.on_error(event["msg"])
+                
+                self.queue.task_done()
+        except Empty:
+            pass
+        finally:
+            # 주기적으로 다시 확인
+            self.after(100, self.on_processing_event)
 
     def on_processing_complete(self, summary: dict):
         """
@@ -75,11 +95,13 @@ class MediaShotdateRenamerApp(tk.Tk):
         - Activates the 'Open Result Folder' button.
         - PRD 2: 완료 팝업 -> "결과 폴더 열기" 버튼 활성화
         """
-        # TODO: M3-01 - 완료 팝업 표시
-        # TODO: FR-08-3 - 처리 요약 표시
-        print("Processing complete!")
-        print(summary)
-        pass
+        # 완료 팝업 표시
+        summary_msg = str(summary) if summary else "처리가 완료되었습니다."
+        messagebox.showinfo("완료", summary_msg)
+        
+        # UI 상태 업데이트
+        self.main_window.enable_result_button()
+        self.main_window.set_start_button_state(True)
 
     def on_error(self, error_details: str):
         """Handles an error from the worker thread."""

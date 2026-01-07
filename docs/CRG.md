@@ -1,6 +1,6 @@
 # CRG — Coding Rules & Guidelines
 > Repository: **media-shotdate-renamer**  
-> Version: v1.0 (2026-01-07)  
+> Version: v1.0 (2026-01-08)  
 > Target OS: Windows  
 > Language/GUI: Python 3.x / tkinter  
 > Packaging: PyInstaller (+ `.spec`)  
@@ -20,7 +20,7 @@
 
 ---
 
-## 2. 저장소/폴더 구조(권장)
+## 2. 저장소/폴더 구조
 ```
 media-shotdate-renamer/
   docs/
@@ -33,34 +33,24 @@ media-shotdate-renamer/
   src/
     msr/                    # package root (Media Shotdate Renamer)
       __init__.py
+      __main__.py
       app.py                # tkinter entry / wiring
-      ui/                   # UI widgets, view models
-        main_window.py
+      ui/                   # UI widgets
+        gui.py
       core/
-        scanner.py          # 파일 수집/정렬/필터
+        file_processor.py   # 파일 수집/처리 파이프라인
         patterns.py         # 정규식, PASS/IMG 판별
         metadata.py         # 메타데이터 모델/정규화
-        exiftool.py         # ExifTool runner (batch or stay_open)
+        exiftool.py         # ExifTool runner (batch)
         planner.py          # 변환 계획(입력 -> 결과 경로/이름/액션)
         collision.py        # 충돌 해결 규칙
         copier.py           # copy executor + 멱등성 체크
-        logger.py           # 한글 사용자 로그 + 파일 로그
         summary.py          # 처리 요약 집계
-      util/
-        paths.py            # Windows path 유틸
-        timefmt.py          # 날짜/시간 포맷
-        safe_io.py          # 안전한 파일 I/O 래퍼
   tools/
     exiftool/
       exiftool.exe
-  build/
-    media-shotdate-renamer.spec
   tests/
-    test_patterns.py
-    test_collision.py
-    test_planner.py
-    fixtures/
-      ...
+    ...
 ```
 - 패키지명 `msr`는 예시이며, 일관되게 유지한다.
 - `tools/exiftool/exiftool.exe`는 **상대경로 기준**으로 포함한다.
@@ -93,8 +83,8 @@ media-shotdate-renamer/
 ### 4.2 파일명 패턴
 - IMG 패턴(대소문자 무시):
   - `IMG_<식별번호>`
-  - 식별번호: `숫자 + 영문 0~10글자`
-  - 권장 정규식: `^(?i)IMG_(?P<id>\d+[a-z]{0,10})$`
+  - 식별번호: `영문 및 숫자의 조합 (1~15자)`
+  - 권장 정규식: `^IMG_(?P<id>[a-z0-9]{1,15})$` (Case-Insensitive)
 - PASS 패턴(확장자 제외 본문):
   - `YYYY-MM-DD_HH-MM-SS_<식별번호>_<카메라>`
   - 권장 정규식:
@@ -144,14 +134,14 @@ media-shotdate-renamer/
 - `Stats`: 요약 카운터(성공/스킵/충돌/에러 등)
 
 ### 5.2 처리 흐름(단일 책임)
-1) `scanner`가 대상 파일 목록 생성 및 정렬
+1) `file_processor`가 대상 파일 목록 생성 및 정렬
 2) `exiftool`이 메타데이터를 **배치**로 추출(JSON)
 3) `metadata`가 촬영일/카메라를 정규화
 4) `planner`가 `Plan` 생성(정책/규칙 반영)
 5) `collision`이 동일 실행 내 충돌명 계산
 6) `copier`가 멱등성 체크 후 복사 실행
 7) `summary`가 카운터 집계
-8) `logger`가 한글 사용자 로그/파일 로그 기록
+8) `file_processor` 내 로깅 기능이 한글 사용자 로그/파일 로그 기록
 
 - UI는 위 코어 로직을 **블랙박스**로 호출하고, 이벤트만 수신한다.
 
@@ -161,7 +151,7 @@ media-shotdate-renamer/
 ### 6.1 필수 원칙
 - “파일 1개당 exiftool 프로세스 1회 실행” 금지(성능 급락).
 - 최소 1개 이상 적용(권장: 배치 + 태그 최소화):
-  1) **배치 추출(chunk 200~1000)**
+  1) **배치 추출(chunk 500)**
   2) **stay_open(지속 프로세스)** (추가 최적화 옵션)
   3) **태그 최소화**
 
@@ -241,4 +231,3 @@ media-shotdate-renamer/
   - `feat(exif): implement batch json extraction`
   - `fix(collision): apply numeric suffix without underscore`
   - `chore(build): add pyinstaller spec and bundle exiftool`
-

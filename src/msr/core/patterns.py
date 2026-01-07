@@ -11,29 +11,26 @@ import re
 # - 파일명이 `IMG_<식별번호>` 패턴
 # - 식별번호: 숫자 + 영문 0~10글자
 # - 대소문자 무시
-# - 정규식: ^(?i)IMG_(?P<id>\\d+[a-z]{0,10})$
-IMG_PATTERN = re.compile(r"^(?i)IMG_(?P<id>\\d+[a-z]{0,10})$")
+# - 정규식: ^IMG_(?P<id>[a-z0-9]{1,15})$
+IMG_PATTERN = re.compile(r"^IMG_(?P<id>[a-z0-9]{1,15})$", re.IGNORECASE)
 
 # PRD FR-04-2: PASS 패턴
 # - 파일명이 `YYYY-MM-DD_HH-MM-SS_<식별번호>_<카메라>.<ext>` 형식
 # - 확장자를 제외한 본문 기준
-# - 정규식: ^\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2}_[^_]+_[A-Za-z0-9]+$
-PASS_PATTERN = re.compile(r"^\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2}_[^_]+_[A-Za-z0-9]+$")
+# - 정규식: ^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_(?P<id>[^_]+)_(?P<camera>[A-Za-z0-9]+)$
+PASS_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_(?P<id>[^_]+)_(?P<camera>[A-Za-z0-9]+)$")
 
 
 def is_img_pattern(filename_stem: str) -> bool:
-    """Checks if the filename (without extension) matches the IMG pattern."""
-    # TODO: M1-02 - 함수 구현
+    """Checks if the filename stem matches the IMG pattern."""
     return bool(IMG_PATTERN.match(filename_stem))
 
 def is_pass_pattern(filename_stem: str) -> bool:
-    """Checks if the filename (without extension) matches the PASS pattern."""
-    # TODO: M1-02 - 함수 구현
+    """Checks if the filename stem matches the PASS pattern."""
     return bool(PASS_PATTERN.match(filename_stem))
 
 def get_img_id(filename_stem: str) -> str | None:
-    """Extracts the identifier from an IMG pattern filename."""
-    # TODO: M1-02 - 함수 구현
+    """Extracts the identifier from an IMG pattern filename stem."""
     match = IMG_PATTERN.match(filename_stem)
     if match:
         return match.group("id")

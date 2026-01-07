@@ -1,3 +1,20 @@
-Pillow
-pyexiftool
-pyinstaller
+# media-shotdate-renamer
+# Dev/Test/Build dependencies
+# - Runtime is mostly Python stdlib + bundled ExifTool exe (tools/exiftool/exiftool.exe)
+
+# -------------------------
+# Test
+# -------------------------
+pytest>=7.4
+pytest-cov>=4.1
+
+# -------------------------
+# Lint / Type (optional but recommended)
+# -------------------------
+ruff>=0.1.8
+mypy>=1.7
+
+# -------------------------
+# Packaging
+# -------------------------
+pyinstaller>=6.3
