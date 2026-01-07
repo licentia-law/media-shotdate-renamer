@@ -1,0 +1,19 @@
+[project]
+name = "media-shotdate-renamer"
+version = "0.1.0"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = ["venv", "dist", "build"]
+
+[tool.mypy]
+python_version = "3.14.2"
+mypy_path = ["src"]
+packages = ["msr"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
