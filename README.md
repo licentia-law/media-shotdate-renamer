@@ -2,9 +2,6 @@
 
 `media-shotdate-renamer`는 대량의 사진 및 동영상 파일의 이름을 촬영 날짜를 기준으로 변경해주는 Windows용 프로그램입니다.
 
-![Screenshot](https://raw.githubusercontent.com/your-username/media-shotdate-renamer/main/docs/screenshot.png) 
-*(실제 스크린샷 이미지로 교체해주세요)*
-
 ## 1. 주요 기능
 
 *   **촬영일 기반 파일명 변경**: 사진/동영상 파일에 기록된 촬영 날짜와 시간 정보를 이용해 `YYYY-MM-DD_HH-MM-SS` 형식의 파일명을 만듭니다.
